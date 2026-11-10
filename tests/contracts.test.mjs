@@ -11,16 +11,30 @@ const load = async (file, extra = {}) => {
   );
   return c;
 };
+const loadChapters = async () => {
+  const c = vm.createContext({});
+  for (const f of ["pinyin-content.js", "chapters.js"])
+    vm.runInContext(
+      await readFile(new URL("../public/" + f, import.meta.url), "utf8"),
+      c,
+    );
+  return c;
+};
 test("stable curriculum IDs, input vocabulary, and original lesson compatibility", async () => {
-  const c = await load("chapters.js");
+  const c = await loadChapters();
   vm.runInContext("globalThis.catalog=CHAPTERS;globalThis.worlds=WORLDS", c);
-  assert.equal(c.catalog.length, 96);
-  assert.equal(c.worlds.length, 16);
-  assert.equal(new Set(c.catalog.map((x) => x.title)).size, 96);
+  assert.equal(c.catalog.length, 114);
+  assert.equal(c.worlds.length, 18);
+  assert.equal(new Set(c.catalog.map((x) => x.title)).size, 114);
+  assert.equal(c.worlds[16].name, "拼音世界");
+  assert.equal(c.worlds[17].name, "认字世界");
+  assert.equal(c.catalog.filter((x) => x.world === 16).length, 14);
+  assert.equal(c.catalog.filter((x) => x.world === 17).length, 4);
   let count = 0;
   for (const [id, ch] of c.catalog.entries()) {
     assert.equal(ch.id, id);
-    assert.equal(ch.world, Math.floor(id / 6));
+    // 原有 96 章仍是每世界 6 章；追加的拼音/认字世界按实际课数排布。
+    if (id < 96) assert.equal(ch.world, Math.floor(id / 6));
     assert.equal(ch.phases.length, 3);
     for (const ph of ch.phases) {
       assert(ph.keys.length > 0);
@@ -34,7 +48,7 @@ test("stable curriculum IDs, input vocabulary, and original lesson compatibility
       }
     }
   }
-  assert.equal(count, 1947);
+  assert.equal(count, 2452);
   const expected = (
     await readFile(new URL("./legacy-chapters.sha256", import.meta.url), "utf8")
   ).trim();
