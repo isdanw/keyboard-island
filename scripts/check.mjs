@@ -13,11 +13,12 @@ for (const file of await readdir(path.join(root, "public")))
     ]);
 const context = vm.createContext({});
 vm.runInContext(
-  (await readFile(path.join(root, "public/chapters.js"), "utf8")) +
+  (await readFile(path.join(root, "public/pinyin-content.js"), "utf8")) +
+    (await readFile(path.join(root, "public/chapters.js"), "utf8")) +
     ";globalThis.catalog=CHAPTERS;globalThis.worlds=WORLDS",
   context,
 );
-if (context.catalog.length !== 96 || context.worlds.length !== 16)
+if (context.catalog.length !== 114 || context.worlds.length !== 18)
   throw Error("Unexpected curriculum size");
 const allowed = (k) =>
   /^[A-Z0-9;,./]$/.test(k) ||
