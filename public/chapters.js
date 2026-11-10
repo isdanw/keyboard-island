@@ -2168,3 +2168,19 @@ add(
     intro: "记下自己学会的本领，一起试试吧！",
   },
 );
+
+// Extension: 拼音世界 / 认字世界。内容数据在同目录 pinyin-content.js，
+// 世界与章节追加在末尾，既有 96 章的 ID 与顺序保持不变（老存档可直接读取）。
+for (const pack of PINYIN_WORLDS) {
+  WORLDS.push(pack.world);
+  const world = WORLDS.length - 1;
+  for (const c of pack.chapters) {
+    add(world, c.title, c.kind, c.lesson, c.sequences, c.goals, c.props, {
+      lower: true,
+      badge: c.badge,
+      newKeys: c.newKeys,
+      intro: c.intro,
+      ...(c.words ? { words: c.words } : {}),
+    });
+  }
+}

@@ -328,3 +328,51 @@
     max-height: 27px;
   }
 }
+
+/* 拼音/认字世界：当前要打的汉字与带调拼音 */
+.kid-word {
+  font-size: 24px;
+  font-weight: 850;
+  letter-spacing: 0.5px;
+  color: #3f6350;
+  background: #fffdf0;
+  border: 3px solid #f0e0b4;
+  border-radius: 14px;
+  padding: 1px 12px;
+  white-space: nowrap;
+  box-shadow: 0 3px 0 #d9c89a55;
+}
+@media (max-width: 720px) {
+  .kid-word {
+    font-size: 16px;
+    padding: 0 7px;
+  }
+}
+
+/* 章数多于 6 的世界（拼音 14 课 / 认字 4 课）：网格自动换行并可滚动 */
+.picture-route.long-route {
+  overflow-y: auto;
+}
+.picture-route.long-route .picture-chapters {
+  grid-template-rows: none;
+  grid-auto-rows: 152px;
+  flex: 0 0 auto;
+}
+@media (max-width: 900px) {
+  .picture-route.long-route .picture-chapters {
+    grid-auto-rows: 132px;
+  }
+}
+@media (max-width: 720px) {
+  .picture-route.long-route .picture-chapters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 126px;
+  }
+}
+.picture-route.long-route .picture-lock {
+  inset: 0 0 33%;
+}
+.picture-route.long-route .picture-lock > svg {
+  height: 44px;
+  width: 44px;
+}

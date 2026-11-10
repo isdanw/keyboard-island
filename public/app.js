@@ -153,13 +153,22 @@ function keyName(k, lower = false) {
 function completedCount() {
   return Object.keys(state.completed).length;
 }
+function worldChapters(world) {
+  return CHAPTERS.filter((c) => c.world === world);
+}
 function nextChapter() {
   return (
     CHAPTERS.find((c) => !state.completed[c.id])?.id ?? CHAPTERS.length - 1
   );
 }
 function isUnlocked(id) {
-  return id === 0 || !!state.completed[id - 1] || !!state.completed[id];
+  const ch = CHAPTERS[id];
+  if (!ch) return false;
+  if (id === 0 || !!state.completed[id - 1] || !!state.completed[id])
+    return true;
+  // 练习世界（拼音/认字）第一章始终可进入，不受前面 96 章进度限制。
+  const world = WORLDS[ch.world];
+  return !!world?.open && worldChapters(ch.world)[0]?.id === id;
 }
 function phaseInfo(g = game) {
   let offset = 0;
@@ -269,7 +278,7 @@ function navigate(next) {
   clearGame();
   if (dialog.open) dialog.close();
   page = next;
-  if (next === "map") mapWorld = Math.floor(nextChapter() / 6);
+  if (next === "map") mapWorld = CHAPTERS[nextChapter()].world;
   render();
 }
 function home() {
@@ -280,7 +289,7 @@ function home() {
     .slice(homeWorldBand * 6, homeWorldBand * 6 + 6)
     .map(
       ({ w, i }) =>
-        `<button data-world="${i}" aria-label="${w.name}" style="--world-color:${playColors[i][0]}">${worldPicture(i)}<span>${w.name}</span><b>${CHAPTERS.slice(i * 6, i * 6 + 6).every((c) => state.completed[c.id]) ? "★" : i + 1}</b></button>`,
+        `<button data-world="${i}" aria-label="${w.name}" style="--world-color:${playColors[i][0]}">${worldPicture(i)}<span>${w.name}</span><b>${worldChapters(i).every((c) => state.completed[c.id]) ? "★" : i + 1}</b></button>`,
     )
     .join(
       "",
@@ -298,10 +307,7 @@ function mapView() {
     )
     .join(
       "",
-    )}</div><button class="world-page-button" data-world-page="1" aria-label="下一组世界" ${mapWorld >= Math.floor((WORLDS.length - 1) / 6) * 6 ? "disabled" : ""}>›</button></div><section class="picture-route ${WORLDS[mapWorld].night || [3, 5].includes(mapWorld) ? "night-route" : ""}" style="--map-bg:${playColors[mapWorld][0]}"><h1>${w.name}</h1><div class="route-dashes" aria-hidden="true"></div><div class="picture-chapters">${CHAPTERS.slice(
-    mapWorld * 6,
-    mapWorld * 6 + 6,
-  )
+    )}</div><button class="world-page-button" data-world-page="1" aria-label="下一组世界" ${mapWorld >= Math.floor((WORLDS.length - 1) / 6) * 6 ? "disabled" : ""}>›</button></div><section class="picture-route ${WORLDS[mapWorld].night || [3, 5].includes(mapWorld) ? "night-route" : ""} ${worldChapters(mapWorld).length > 6 ? "long-route" : ""}" style="--map-bg:${playColors[mapWorld][0]}"><h1>${w.name}</h1><div class="route-dashes" aria-hidden="true"></div><div class="picture-chapters">${worldChapters(mapWorld)
     .map((ch) => {
       const done = state.completed[ch.id],
         open = isUnlocked(ch.id);
@@ -475,7 +481,7 @@ function gameView() {
     info = phaseInfo(),
     k = currentTarget(),
     covered = game.hideHints && !showMemory;
-  return `<section class="game-area kid-stage ${WORLDS[ch.world].night || [3, 5].includes(ch.world) ? "night-stage" : ""}" style="--sky:${playColors[ch.world][0]};--field:${playColors[ch.world][1]}">${campaignScene(ch, info.index, info.beat)}<div class="kid-hud"><span class="kid-chapter">${ch.id + 1}</span><h2>${ch.title}</h2><button class="voice-button" data-quest="${ch.id}" aria-label="听提示">${playIcon("sound")}</button><div class="kid-phase-eggs" aria-label="三个小任务">${ch.phases.map((p, i) => `<span class="${i < info.index ? "hatched" : i === info.index ? "active" : ""}" aria-label="${p.goal}">${i < info.index ? "★" : i + 1}</span>`).join("")}</div><button class="round-action pause-button" data-pause aria-label="暂停">Ⅱ</button></div><button class="catch-target ${k.length > 2 ? "long-key" : ""} type-${ch.kind}" data-read-key aria-label="听目标按键 ${keyName(k)}" style="--float-x:${58 + (game.step % 3) * 9}%;--float-y:${24 + (game.step % 2) * 11}%"><span class="target-wings"></span><b>${covered ? "?" : bigKey(k, ch.lower)}</b><i>▾</i></button><button class="buddy-tickle" data-tickle aria-label="摸摸豆豆"></button><div class="kid-jar" aria-label="发现次数 ${game.step}"><span>★</span><b>${game.step}</b><small>/ ${game.sequence.length}</small></div><div class="sticker-on-stage" aria-hidden="true">${state.sticker || "🌟"}</div><div class="particles"></div><div class="scene-effects"></div><span id="feedback" class="sr-only" role="status">${game.status || "慢慢来，每次按键都会有新发现。"}</span><div id="reaction" aria-hidden="true"></div></section><div class="kid-controls ${ch.id < 19 ? "no-digits" : ""}"><div class="key-station"><button class="target-key ${k.startsWith("SHIFT+") ? "combo-key" : ""}" data-read-key data-expected="${k}" aria-label="听目标按键">${covered ? "?" : bigKey(k, ch.lower)}</button><div class="upcoming-keys sequence-strip" aria-label="接下来几个按键">${game.sequence
+  return `<section class="game-area kid-stage ${WORLDS[ch.world].night || [3, 5].includes(ch.world) ? "night-stage" : ""}" style="--sky:${playColors[ch.world][0]};--field:${playColors[ch.world][1]}">${campaignScene(ch, info.index, info.beat)}<div class="kid-hud"><span class="kid-chapter">${ch.id + 1}</span><h2>${ch.title}</h2>${ch.words ? `<span class="kid-word">${escapeText(ch.words[info.index])}</span>` : ""}<button class="voice-button" data-quest="${ch.id}" aria-label="听提示">${playIcon("sound")}</button><div class="kid-phase-eggs" aria-label="三个小任务">${ch.phases.map((p, i) => `<span class="${i < info.index ? "hatched" : i === info.index ? "active" : ""}" aria-label="${p.goal}">${i < info.index ? "★" : i + 1}</span>`).join("")}</div><button class="round-action pause-button" data-pause aria-label="暂停">Ⅱ</button></div><button class="catch-target ${k.length > 2 ? "long-key" : ""} type-${ch.kind}" data-read-key aria-label="听目标按键 ${keyName(k)}" style="--float-x:${58 + (game.step % 3) * 9}%;--float-y:${24 + (game.step % 2) * 11}%"><span class="target-wings"></span><b>${covered ? "?" : bigKey(k, ch.lower)}</b><i>▾</i></button><button class="buddy-tickle" data-tickle aria-label="摸摸豆豆"></button><div class="kid-jar" aria-label="发现次数 ${game.step}"><span>★</span><b>${game.step}</b><small>/ ${game.sequence.length}</small></div><div class="sticker-on-stage" aria-hidden="true">${state.sticker || "🌟"}</div><div class="particles"></div><div class="scene-effects"></div><span id="feedback" class="sr-only" role="status">${game.status || "慢慢来，每次按键都会有新发现。"}</span><div id="reaction" aria-hidden="true"></div></section><div class="kid-controls ${ch.id < 19 ? "no-digits" : ""}"><div class="key-station"><button class="target-key ${k.startsWith("SHIFT+") ? "combo-key" : ""}" data-read-key data-expected="${k}" aria-label="听目标按键">${covered ? "?" : bigKey(k, ch.lower)}</button><div class="upcoming-keys sequence-strip" aria-label="接下来几个按键">${game.sequence
     .slice(game.step + 1, game.step + 4)
     .map((key) => `<span>${covered ? "•" : bigKey(key, ch.lower)}</span>`)
     .join(
@@ -704,7 +710,8 @@ function finish() {
   state.rounds++;
   state.seconds += elapsed;
   const reward = first ? 15 : 3,
-    worldReward = first && ch.id % 6 === 5 ? 25 : 0;
+    worldReward =
+      first && worldChapters(ch.world).at(-1)?.id === ch.id ? 25 : 0;
   state.shells += reward + worldReward;
   state.checkpoint = null;
   save();
@@ -1189,7 +1196,9 @@ function sceneThumb(ch) {
     .replaceAll('id="scene-object"', 'class="picture-object"');
 }
 function worldPicture(world) {
-  const ch = CHAPTERS[[5, 11, 12, 18, 25, 35][world] ?? world * 6 + 5];
+  const list = worldChapters(world),
+    pick = CHAPTERS[[5, 11, 12, 18, 25, 35][world] ?? world * 6 + 5],
+    ch = pick?.world === world ? pick : list[Math.min(5, list.length - 1)];
   return `<span class="world-picture">${sceneThumb(ch)}</span>`;
 }
 function focusedHand(k) {
