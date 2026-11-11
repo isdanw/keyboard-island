@@ -113,3 +113,82 @@ test("missing optional recordings neither fetch nor queue speech", async () => {
   assert.equal(c.director.pending, null);
   assert.equal(requests, 0);
 });
+test("target letters render as a case pair while other keys stay unchanged", async () => {
+  const c = await load("key-display.js");
+  const K = c.KeyDisplay;
+  assert.equal(K.label("A"), "A·a");
+  assert.match(K.html("A"), /class="key-pair"/);
+  assert.match(K.html("A"), />A</);
+  assert.match(K.html("A"), />a</);
+  for (const [key, text] of [
+    ["SHIFT+A", "Shift + A"],
+    ["0", "0"],
+    ["1", "1"],
+    [";", ";"],
+    [",", ","],
+    [".", "."],
+    ["/", "/"],
+    ["SPACE", "␣"],
+    ["ENTER", "↵"],
+    ["BACKSPACE", "⌫"],
+  ]) {
+    assert.equal(K.label(key), text);
+    assert.doesNotMatch(K.html(key), /key-pair/);
+  }
+});
+test("progress import validates types, keeps unknown fields and summarizes", async () => {
+  const c = await load("progress-file.js");
+  const P = c.ProgressFile;
+  const backup = {
+    shells: 21,
+    total: 30,
+    rounds: 2,
+    seconds: 120,
+    keys: { a: { good: 3, miss: 1 } },
+    completed: { 96: { stars: 3 }, 100: { stars: 1 } },
+    owned: ["plant"],
+    sound: true,
+    music: false,
+    voice: false,
+    reduced: false,
+    handGuide: true,
+    volume: 0.5,
+    checkpoint: null,
+    sticker: "🌟",
+    customField: { keep: true },
+  };
+  const ok = P.parse(JSON.stringify(backup));
+  assert.equal(ok.ok, true);
+  assert.equal(ok.data.customField.keep, true);
+  assert.equal(ok.data.keys.a.good, 3);
+  assert.equal(ok.summary.completed, 2);
+  assert.equal(ok.summary.shells, 21);
+  assert.equal(ok.summary.minutes, 2);
+  for (const text of [
+    "[]",
+    "null",
+    '"text"',
+    "42",
+    '{"shells":"3"}',
+    '{"keys":[]}',
+    '{"owned":{}}',
+    '{"sound":"yes"}',
+    '{"volume":1.2}',
+    '{"checkpoint":[]}',
+    '{"sticker":1}',
+    "{bad",
+  ]) {
+    const bad = P.parse(text);
+    assert.equal(bad.ok, false);
+    assert.equal(typeof bad.error, "string");
+  }
+  assert.equal(P.parse(" ".repeat(512 * 1024 + 1)).ok, false);
+  assert.match(
+    P.fileName(new Date(2026, 0, 5, 7, 8)),
+    /^keyboard-island-progress-\d{8}-\d{4}\.json$/,
+  );
+  assert.equal(
+    P.fileName(new Date(2026, 0, 5, 7, 8)),
+    "keyboard-island-progress-20260105-0708.json",
+  );
+});
