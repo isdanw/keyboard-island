@@ -145,6 +145,17 @@ test("shift combos keep the Shift marker and pair the letter", async () => {
   assert.match(K.html("SHIFT+A"), /<em>a<\/em>/);
   assert.doesNotMatch(K.html("SHIFT+A"), /SHIFT\+/);
 });
+test("chapter dialog key chips render through the shared KeyDisplay", async () => {
+  const app = await readFile(
+    new URL("../public/app.js", import.meta.url),
+    "utf8",
+  );
+  const start = app.indexOf('class="preview-keycaps"');
+  assert(start > -1);
+  const chips = app.slice(start, app.indexOf("</div>", start));
+  assert.match(chips, /KeyDisplay\.html\(k\)/);
+  assert.doesNotMatch(chips, /keyName\(/);
+});
 test("progress import validates types, keeps unknown fields and summarizes", async () => {
   const c = await load("progress-file.js");
   const P = c.ProgressFile;
