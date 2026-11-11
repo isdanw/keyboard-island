@@ -761,6 +761,9 @@ main[data-page="game"] {
   font-size: 25px;
   letter-spacing: -0.5px;
 }
+.catch-target.long-key.combo-key {
+  width: 190px;
+}
 .catch-target.caught {
   animation: target-catch 0.28s ease-out forwards;
 }
@@ -848,9 +851,14 @@ main[data-page="game"] {
   margin: 0 auto;
 }
 .key-station .target-key.combo-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   font-size: 24px;
   padding: 0 10px;
-  min-width: 150px;
+  min-width: 170px;
+  max-width: 190px;
 }
 .upcoming-keys {
   gap: 7px;
@@ -876,6 +884,13 @@ main[data-page="game"] {
 }
 .upcoming-keys > span:nth-child(3) {
   opacity: 0.45;
+}
+.upcoming-keys.has-combo {
+  flex-wrap: wrap;
+  max-height: none;
+}
+.upcoming-keys > span.combo-key {
+  flex: 0 0 auto;
 }
 .memory-button {
   position: absolute;
@@ -2059,8 +2074,8 @@ dialog {
     border-radius: 19px;
   }
   .key-station .target-key.combo-key {
-    min-width: 128px;
-    max-width: 135px;
+    min-width: 138px;
+    max-width: 150px;
     font-size: 20px;
   }
   .kid-hand-guide {
@@ -2123,6 +2138,9 @@ dialog {
   .catch-target.long-key {
     height: 64px;
     width: 140px;
+  }
+  .catch-target.long-key.combo-key {
+    width: 168px;
   }
   .catch-target.long-key b {
     font-size: 22px;
@@ -2778,6 +2796,9 @@ dialog {
     width: 119px;
     left: calc(var(--float-x) - 28%);
   }
+  .catch-target.long-key.combo-key {
+    width: 150px;
+  }
   .catch-target.long-key b {
     font-size: 18px;
   }
@@ -2829,10 +2850,10 @@ dialog {
     box-shadow: 0 5px 0 #c09c4e;
   }
   .key-station .target-key.combo-key {
-    min-width: 78px;
-    max-width: 78px;
+    min-width: 92px;
+    max-width: 92px;
     height: 66px;
-    font-size: 13px;
+    font-size: 12px;
     padding: 0 2px;
   }
   .upcoming-keys {
@@ -3530,6 +3551,9 @@ dialog {
   .catch-target.long-key {
     height: 51px;
     width: 106px;
+  }
+  .catch-target.long-key.combo-key {
+    width: 122px;
   }
   .catch-target.long-key b {
     font-size: 16px;
