@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Show letter target keys as a case pair (`A·a`) in the target bubble, target key and upcoming-key strip, matching physical keycaps for young learners.
+- Add a parent progress backup section in settings: export downloads `keyboard-island-progress-YYYYMMDD-HHmm.json`; importing validates the file and asks for confirmation because it overwrites local progress and cannot be undone.
+
 ## 0.2.0 — 2026-10-30
 
 - Add Sentence Post Office as an independent series in `games/sentence-post-office/`.
