@@ -121,7 +121,6 @@ test("target letters render as a case pair while other keys stay unchanged", asy
   assert.match(K.html("A"), />A</);
   assert.match(K.html("A"), />a</);
   for (const [key, text] of [
-    ["SHIFT+A", "Shift + A"],
     ["0", "0"],
     ["1", "1"],
     [";", ";"],
@@ -135,6 +134,16 @@ test("target letters render as a case pair while other keys stay unchanged", asy
     assert.equal(K.label(key), text);
     assert.doesNotMatch(K.html(key), /key-pair/);
   }
+});
+test("shift combos keep the Shift marker and pair the letter", async () => {
+  const c = await load("key-display.js");
+  const K = c.KeyDisplay;
+  assert.equal(K.label("SHIFT+A"), "Shift + A·a");
+  assert.equal(K.label("SHIFT+Z"), "Shift + Z·z");
+  assert.match(K.html("SHIFT+A"), /^Shift \+ <span class="key-pair">/);
+  assert.match(K.html("SHIFT+A"), /<span>A<\/span>/);
+  assert.match(K.html("SHIFT+A"), /<em>a<\/em>/);
+  assert.doesNotMatch(K.html("SHIFT+A"), /SHIFT\+/);
 });
 test("progress import validates types, keeps unknown fields and summarizes", async () => {
   const c = await load("progress-file.js");
