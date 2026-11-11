@@ -326,7 +326,10 @@ function previewChapter(id) {
       ...new Set(ch.phases[0].keys),
     ]
       .slice(0, 4)
-      .map((k) => `<span>${keyName(k, ch.lower)}</span>`)
+      .map(
+        (k) =>
+          `<span${k.startsWith("SHIFT+") ? ' class="combo"' : ""}>${KeyDisplay.html(k)}</span>`,
+      )
       .join(
         "",
       )}</div>${open ? `<button class="big-play modal-play" data-chapter="${id}" aria-label="开始这一章"><span>▶</span></button>` : `<div class="locked-preview">${playIcon("lock")}<span class="sr-only">先完成第 ${id} 章</span></div><button class="primary" data-chapter="${nextChapter()}" aria-label="继续当前冒险">▶</button>`}<button class="voice-button" data-quest="${id}" aria-label="听听这一章要做什么">${playIcon("sound")}</button></div>`,

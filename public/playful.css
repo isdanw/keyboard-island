@@ -1495,6 +1495,7 @@ main[data-page="game"] {
 }
 .preview-keycaps {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
   margin: 10px 0 20px;
@@ -1509,8 +1510,17 @@ main[data-page="game"] {
   padding: 0 10px;
   font-size: 27px;
   font-weight: 750;
-  display: grid;
-  place-items: center;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-keycaps .key-pair {
+  font-size: 0.8em;
+}
+.preview-keycaps > span.combo {
+  font-size: 19px;
+  gap: 0.26em;
 }
 .modal-play {
   position: relative;
@@ -3276,6 +3286,9 @@ dialog {
     font-size: 23px;
     padding: 0 8px;
     border-width: 2px;
+  }
+  .preview-keycaps > span.combo {
+    font-size: 16px;
   }
   .modal-play {
     height: 76px;
