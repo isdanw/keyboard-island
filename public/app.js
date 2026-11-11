@@ -821,8 +821,67 @@ function settings() {
       )
       .join(
         "",
-      )}<label class="setting-row">音量<input type="range" min="0" max="1" step="0.05" data-setting="volume" value="${state.volume ?? 0.65}"></label><div class="sound-demos"><button data-voice-demo ${Object.values(VOICE_CLIPS).some((c) => c.url) ? "" : "disabled"} aria-label="试听豆豆的声音">🗣️</button><button data-sound-demo="water" aria-label="听水花">💦</button><button data-sound-demo="drum" aria-label="听小鼓">🥁</button><button data-sound-demo="party" aria-label="听庆祝">🎉</button></div><p>学习路线：基准行 → 上排 → 下排 → 数字与连续输入 → Shift / 退格 / 回车 → 短句。<br>后期使用拼音字母串表达短词和短句；这不是中文输入法选字训练。<br>游戏不能判断实际用了哪根手指，可陪孩子对照手势图观察。进度只保存在当前浏览器。</p>`,
+      )}<label class="setting-row">音量<input type="range" min="0" max="1" step="0.05" data-setting="volume" value="${state.volume ?? 0.65}"></label><div class="sound-demos"><button data-voice-demo ${Object.values(VOICE_CLIPS).some((c) => c.url) ? "" : "disabled"} aria-label="试听豆豆的声音">🗣️</button><button data-sound-demo="water" aria-label="听水花">💦</button><button data-sound-demo="drum" aria-label="听小鼓">🥁</button><button data-sound-demo="party" aria-label="听庆祝">🎉</button></div><p>学习路线：基准行 → 上排 → 下排 → 数字与连续输入 → Shift / 退格 / 回车 → 短句。<br>后期使用拼音字母串表达短词和短句；这不是中文输入法选字训练。<br>游戏不能判断实际用了哪根手指，可陪孩子对照手势图观察。进度只保存在当前浏览器。</p><div class="progress-backup"><h3>进度备份</h3><p>进度只保存在这台设备的当前浏览器里。换设备或清理浏览数据前，可以先导出一份备份；导入备份会覆盖本机当前进度，而且不能撤销。</p><div class="progress-actions"><button class="secondary" data-progress-export aria-label="导出进度备份">导出进度</button><button class="secondary" data-progress-load aria-label="导入进度备份">导入进度</button></div><input type="file" accept=".json,application/json" data-progress-import hidden></div>`,
   );
+}
+let pendingImport = null;
+function downloadProgress() {
+  let raw = localStorage.getItem(STORE);
+  if (!raw) {
+    save();
+    raw = localStorage.getItem(STORE);
+  }
+  const blob = new Blob([raw ?? JSON.stringify(state)], {
+      type: "application/json",
+    }),
+    url = URL.createObjectURL(blob),
+    link = document.createElement("a");
+  link.href = url;
+  link.download = ProgressFile.fileName(new Date());
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  if (dialog.open) dialog.close();
+  toast("进度备份已经下载，请放好这个文件。");
+}
+async function importProgress(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  let text;
+  try {
+    text = await file.text();
+  } catch {
+    input.value = "";
+    if (dialog.open) dialog.close();
+    toast("读不到这个文件，请再选一次。");
+    return;
+  }
+  input.value = "";
+  const result = ProgressFile.parse(text);
+  if (!result.ok) {
+    if (dialog.open) dialog.close();
+    toast(result.error);
+    return;
+  }
+  const { completed, shells, minutes } = result.summary;
+  pendingImport = result.data;
+  openDialog(
+    `<button class="dialog-close" data-close aria-label="取消导入">×</button><h2>用备份覆盖进度？</h2><p><b>导入会覆盖本机当前进度，而且不可撤销。</b>如果想留一份现在的进度，请先取消并导出。</p><div class="stats"><div><strong>${completed} / ${CHAPTERS.length}</strong><small>备份里已完成的章节</small></div><div><strong>${shells}</strong><small>贝壳</small></div><div><strong>${minutes}</strong><small>累计分钟</small></div></div><div class="result-choices"><button class="secondary" data-progress-cancel>先不导入</button><button class="primary" data-progress-confirm>覆盖并导入</button></div>`,
+  );
+}
+function confirmImport() {
+  if (!pendingImport) return;
+  try {
+    localStorage.setItem(STORE, JSON.stringify(pendingImport));
+  } catch {
+    pendingImport = null;
+    dialog.close();
+    toast("浏览器不允许写入存档，本机进度没有改变。");
+    return;
+  }
+  pendingImport = null;
+  location.reload();
 }
 function render() {
   updateHeader();
@@ -928,6 +987,23 @@ function handleClick(e) {
     render();
     return;
   }
+  if (b.hasAttribute("data-progress-export")) {
+    downloadProgress();
+    return;
+  }
+  if (b.hasAttribute("data-progress-load")) {
+    dialog.querySelector("[data-progress-import]")?.click();
+    return;
+  }
+  if (b.hasAttribute("data-progress-confirm")) {
+    confirmImport();
+    return;
+  }
+  if (b.hasAttribute("data-progress-cancel")) {
+    pendingImport = null;
+    dialog.close();
+    return;
+  }
   if (b.hasAttribute("data-close")) {
     dialog.close();
     return;
@@ -993,6 +1069,10 @@ function handleClick(e) {
 app.addEventListener("click", handleClick);
 dialog.addEventListener("click", handleClick);
 dialog.addEventListener("change", (e) => {
+  if (e.target.matches("[data-progress-import]")) {
+    importProgress(e.target);
+    return;
+  }
   const key = e.target.dataset.setting;
   if (key && Object.hasOwn(defaults, key)) {
     state[key] = key === "volume" ? Number(e.target.value) : e.target.checked;
@@ -1001,6 +1081,7 @@ dialog.addEventListener("change", (e) => {
   }
 });
 dialog.addEventListener("close", () => {
+  if (!dialog.open) pendingImport = null;
   if (
     !dialog.open &&
     (["manual", "win"].includes(VoiceDirector.active?.kind) ||
@@ -1210,8 +1291,8 @@ function focusedHand(k) {
         fingerFor(k).side === "右" ? "180 0 180 166" : "0 0 180 166",
       );
 }
-function bigKey(k, lower = false) {
-  return { SPACE: "␣", ENTER: "↵", BACKSPACE: "⌫" }[k] || keyName(k, lower);
+function bigKey(k) {
+  return KeyDisplay.html(k);
 }
 function playAction(ch, info, phaseEnd) {
   const stage = $(".kid-stage"),

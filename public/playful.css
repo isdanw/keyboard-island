@@ -3883,3 +3883,51 @@ dialog {
     transform: translateY(-3px) rotate(3deg);
   }
 }
+.key-pair {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.04em;
+  white-space: nowrap;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.key-pair > em {
+  font-size: 0.62em;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0;
+  opacity: 0.6;
+}
+.key-pair > em::before {
+  content: "·";
+  margin-right: 0.06em;
+}
+.catch-target .key-pair {
+  font-size: 0.78em;
+}
+.key-station .target-key .key-pair {
+  font-size: 0.76em;
+}
+.upcoming-keys .key-pair {
+  font-size: 0.86em;
+  gap: 0.02em;
+}
+.progress-backup {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px dashed #d9ca9c;
+}
+.progress-backup h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #4d6b50;
+}
+.progress-backup p {
+  margin: 0 0 12px;
+}
+.progress-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
